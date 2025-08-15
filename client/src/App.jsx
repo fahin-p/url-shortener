@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+// For local dev, set VITE_API_BASE_URL in .env
+// Leave blank for production so relative paths work
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 function App() {
   const [longUrl, setLongUrl] = useState('');
@@ -19,9 +21,12 @@ function App() {
 
     try {
       const response = await axios.post(`${API_BASE_URL}/api/shorten`, { longUrl });
-      const createdShortUrl = `${API_BASE_URL}/${response.data.shortCode}`;
+
+      // Always use full absolute URL
+      const createdShortUrl = `${window.location.origin}/${response.data.shortCode}`;
       setShortUrl(createdShortUrl);
     } catch (err) {
+      console.error('Error shortening URL:', err);
       setError(err.response?.data?.error || 'Failed to shorten URL. Please try again.');
     } finally {
       setIsLoading(false);
@@ -33,10 +38,11 @@ function App() {
       <h1>URL Shortener</h1>
       <form onSubmit={handleSubmit}>
         <input
-          type="text"
+          type="url"
           value={longUrl}
           onChange={(e) => setLongUrl(e.target.value)}
           placeholder="Enter a long URL to shorten..."
+          required
         />
         <button type="submit" disabled={isLoading}>
           {isLoading ? 'Shortening...' : 'Shorten'}
